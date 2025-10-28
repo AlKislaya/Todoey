@@ -7,27 +7,24 @@
 
 import UIKit
 
-struct Constants {
-    struct Outlets {
-        struct TableView {
-            static let toDoListReusableCell = "ToDoItemCell"
-        }
-    }
-    struct Views {
-        struct Alert {
-            static let addItem = "Add item"
-            static let addNewItem = "Add new item"
-            static let createNewItem = "Create new item"
-        }
-    }
-}
-
 class TodoListViewController: UITableViewController {
 
     var itemArray: [String] = []
+    let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        initListOfItems()
+    }
+    
+    func initListOfItems() {
+        let items = defaults.array(forKey: Constants.Defaults.toDoList) as? [String]
+        if items == nil {
+            print("err_noSavedListOfItems")
+            return
+        }
+        
+        itemArray = items!
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -69,6 +66,7 @@ class TodoListViewController: UITableViewController {
             }
             
             self.itemArray.append(alertTextField.text!)
+            self.defaults.set(self.itemArray, forKey: Constants.Defaults.toDoList)
             self.tableView.reloadData()
         }
         
