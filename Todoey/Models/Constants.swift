@@ -8,9 +8,6 @@
 import UIKit
 
 struct Constants {
-    struct Defaults {
-        static let toDoList = "toDoList"
-    }
     struct Outlets {
         struct TableView {
             static let toDoListReusableCell = "ToDoItemCell"
@@ -22,5 +19,8 @@ struct Constants {
             static let addNewItem = "Add new item"
             static let createNewItem = "Create new item"
         }
+    }
+    struct Directory {
+        static let toDoList = "Items.plist"
     }
 }

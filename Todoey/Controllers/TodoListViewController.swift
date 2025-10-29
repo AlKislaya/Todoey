@@ -9,22 +9,12 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray: [String] = []
-    let defaults = UserDefaults.standard
+    var itemArray = [ToDoListItem]()
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent(Constants.Directory.toDoList)
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        initListOfItems()
-    }
-    
-    func initListOfItems() {
-        let items = defaults.array(forKey: Constants.Defaults.toDoList) as? [String]
-        if items == nil {
-            print("err_noSavedListOfItems")
-            return
-        }
-        
-        itemArray = items!
+        loadItemsData()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -40,17 +30,19 @@ class TodoListViewController: UITableViewController {
         }
         
         var config = cell.defaultContentConfiguration()
-        config.text = itemArray[indexPath.row]
+        config.text = itemArray[indexPath.row].task
         cell.contentConfiguration = config
+        cell.accessoryType = itemArray[indexPath.row].isDone ? .checkmark : .none
         
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let currentAccessoryType = tableView.cellForRow(at: indexPath)?.accessoryType
-        tableView.cellForRow(at: indexPath)?.accessoryType = currentAccessoryType == .checkmark ? .none : .checkmark
+        itemArray[indexPath.row].isDone = !itemArray[indexPath.row].isDone
+        saveItemsData()
         
         tableView.deselectRow(at: indexPath, animated: true)
+        tableView.reloadData()
     }
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -59,14 +51,14 @@ class TodoListViewController: UITableViewController {
         
         let action = UIAlertAction(title: Constants.Views.Alert.addItem, style: .default) { alertAction in
             
-            let newItem = alertTextField.text
-            if  newItem == nil || newItem!.isEmpty {
+            let newTask = alertTextField.text
+            if  newTask == nil || newTask!.isEmpty {
                 print("err_itemIsNilOrEmpty")
                 return
             }
             
-            self.itemArray.append(alertTextField.text!)
-            self.defaults.set(self.itemArray, forKey: Constants.Defaults.toDoList)
+            self.itemArray.append(ToDoListItem(task: newTask!))
+            self.saveItemsData()
             self.tableView.reloadData()
         }
         
@@ -76,5 +68,28 @@ class TodoListViewController: UITableViewController {
         }
         alert.addAction(action)
         present(alert, animated: true)
+    }
+    
+    //MARK: - Encode, decode items data
+    
+    func saveItemsData() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(self.itemArray)
+            try data.write(to: self.dataFilePath!)
+        } catch {
+            print(error)
+        }
+    }
+    
+    func loadItemsData() {
+        do {
+            if let data = try? Data(contentsOf: dataFilePath!) {
+                let decoder = PropertyListDecoder()
+                itemArray = try decoder.decode([ToDoListItem].self, from: data)
+            }
+        } catch {
+            print(error)
+        }
     }
 }
