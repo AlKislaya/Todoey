@@ -6,15 +6,16 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray = [ToDoListItem]()
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent(Constants.Directory.toDoList)
+    var itemArray = [Item]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadItemsData()
+        //loadItemsData()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -56,8 +57,11 @@ class TodoListViewController: UITableViewController {
                 print("err_itemIsNilOrEmpty")
                 return
             }
+            let newItem = Item(context: self.context)
+            newItem.task = newTask
+            newItem.isDone = false
             
-            self.itemArray.append(ToDoListItem(task: newTask!))
+            self.itemArray.append(newItem)
             self.saveItemsData()
             self.tableView.reloadData()
         }
@@ -70,24 +74,10 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true)
     }
     
-    //MARK: - Encode, decode items data
-    
     func saveItemsData() {
-        let encoder = PropertyListEncoder()
         do {
-            let data = try encoder.encode(self.itemArray)
-            try data.write(to: self.dataFilePath!)
-        } catch {
-            print(error)
-        }
-    }
-    
-    func loadItemsData() {
-        do {
-            if let data = try? Data(contentsOf: dataFilePath!) {
-                let decoder = PropertyListDecoder()
-                itemArray = try decoder.decode([ToDoListItem].self, from: data)
-            }
+            try context.save()
+            print("Saved successfully")
         } catch {
             print(error)
         }
