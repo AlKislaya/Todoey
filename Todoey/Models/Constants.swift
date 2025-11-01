@@ -20,7 +20,9 @@ struct Constants {
             static let createNewItem = "Create new item"
         }
     }
-    struct Directory {
-        static let toDoList = "Items.plist"
+    struct Database {
+        struct Predicate {
+            static let titleContainsString = "task CONTAINS[cd] %@"
+        }
     }
 }

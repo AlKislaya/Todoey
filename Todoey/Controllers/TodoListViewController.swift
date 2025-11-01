@@ -83,16 +83,33 @@ class TodoListViewController: UITableViewController {
         }
     }
     
-    func loadItemsData() {
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+    func loadItemsData(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         do {
             itemArray = try context.fetch(request)
         } catch {
             print(error)
         }
+        
+        tableView.reloadData()
+    }
+    
     func deleteItem(index: Int) {
         context.delete(itemArray[index])
         itemArray.remove(at: index)
     }
+}
+
+extension TodoListViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText == "" {
+            loadItemsData()
+            return
+        }
+        
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        let predicate = NSPredicate(format: Constants.Database.Predicate.titleContainsString, searchText)
+        request.predicate = predicate
+        loadItemsData(with: request)
     }
 }
