@@ -90,5 +90,9 @@ class TodoListViewController: UITableViewController {
         } catch {
             print(error)
         }
+    func deleteItem(index: Int) {
+        context.delete(itemArray[index])
+        itemArray.remove(at: index)
+    }
     }
 }
