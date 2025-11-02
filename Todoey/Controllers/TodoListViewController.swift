@@ -10,12 +10,13 @@ import CoreData
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray = [Item]()
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    var itemArray = [Item]()
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        loadItemsData()
+    var selectedCategory: Category? {
+        didSet {
+            loadData()
+        }
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -23,7 +24,7 @@ class TodoListViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Constants.Outlets.TableView.toDoListReusableCell, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: Constants.Outlets.TableView.ReusableCell.toDoList, for: indexPath)
         
         if indexPath.row >= itemArray.count {
             print("err_indexOutOfRange")
@@ -40,7 +41,7 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         itemArray[indexPath.row].isDone = !itemArray[indexPath.row].isDone
-        saveItemsData()
+        saveData()
         
         tableView.deselectRow(at: indexPath, animated: true)
         tableView.reloadData()
@@ -60,21 +61,22 @@ class TodoListViewController: UITableViewController {
             let newItem = Item(context: self.context)
             newItem.task = newTask
             newItem.isDone = false
+            newItem.parentCategory = self.selectedCategory
             
             self.itemArray.append(newItem)
-            self.saveItemsData()
+            self.saveData()
             self.tableView.reloadData()
         }
         
         alert.addTextField { textField in
-            alertTextField.placeholder = Constants.Views.Alert.createNewItem
             alertTextField = textField
+            alertTextField.placeholder = Constants.Views.Alert.createNewItem
         }
         alert.addAction(action)
         present(alert, animated: true)
     }
     
-    func saveItemsData() {
+    func saveData() {
         do {
             try context.save()
             print("Saved successfully")
@@ -83,7 +85,14 @@ class TodoListViewController: UITableViewController {
         }
     }
     
-    func loadItemsData(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadData(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        let categoryPredicate = NSPredicate(format: Constants.Database.Predicate.categoryNameMatchesString, selectedCategory!.name!)
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [additionalPredicate, categoryPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+        
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -103,13 +112,12 @@ extension TodoListViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText == "" {
-            loadItemsData()
+            loadData()
             return
         }
         
         let request: NSFetchRequest<Item> = Item.fetchRequest()
         let predicate = NSPredicate(format: Constants.Database.Predicate.titleContainsString, searchText)
-        request.predicate = predicate
-        loadItemsData(with: request)
+        loadData(with: request, predicate: predicate)
     }
 }
