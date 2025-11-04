@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreData
+import SwipeCellKit
 
 class CategoryViewController: UITableViewController {
     
@@ -23,17 +24,19 @@ class CategoryViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Constants.Outlets.TableView.ReusableCell.category, for: indexPath)
-        
         if indexPath.row >= categories.count {
             print("err_indexOutOfRange")
             return UITableViewCell()
         }
         
+        let cell = tableView.dequeueReusableCell(withIdentifier: Constants.Outlets.TableView.ReusableCell.category, for: indexPath)
+                    as! SwipeTableViewCell
+        
         var config = cell.defaultContentConfiguration()
         config.text = categories[indexPath.row].name
         cell.contentConfiguration = config
         
+        cell.delegate = self
         return cell
     }
     
@@ -95,5 +98,32 @@ class CategoryViewController: UITableViewController {
         }
         
         tableView.reloadData()
+    }
+    
+    func deleteCategory(index: Int) {
+        context.delete(categories[index])
+        categories.remove(at: index)
+    }
+}
+
+extension CategoryViewController: SwipeTableViewCellDelegate {
+    
+    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        guard orientation == .right else {
+            return nil
+        }
+        
+        let deleteAction = SwipeAction(style: .destructive, title: Constants.Views.Label.delete) { action, indexPath in
+            self.deleteCategory(index: indexPath.row)
+        }
+        
+        deleteAction.image = UIImage(named: Constants.Assets.Images.trashIcon)
+        return [deleteAction]
+    }
+    
+    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+        var options = SwipeOptions()
+        options.expansionStyle = .destructive
+        return options
     }
 }

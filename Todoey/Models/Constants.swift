@@ -25,11 +25,19 @@ struct Constants {
             static let addNewCategory = "Add new Category"
             static let createNewCategory = "Create new Category"
         }
+        struct Label {
+            static let delete = "Delete"
+        }
     }
     struct Database {
         struct Predicate {
             static let titleContainsString = "task CONTAINS[cd] %@"
             static let categoryNameMatchesString = "parentCategory.name MATCHES %@"
+        }
+    }
+    struct Assets {
+        struct Images {
+            static let trashIcon = "Trash Icon"
         }
     }
 }

@@ -101,11 +101,6 @@ class TodoListViewController: UITableViewController {
         
         tableView.reloadData()
     }
-    
-    func deleteItem(index: Int) {
-        context.delete(itemArray[index])
-        itemArray.remove(at: index)
-    }
 }
 
 extension TodoListViewController: UISearchBarDelegate {
